@@ -1,0 +1,26 @@
+{
+  "name": "Browser Productivity Monitor",
+  "version": "0.1.0",
+  "description": "Measuring how you spend your time on the internet: How much of it is productive, and when you work best.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": {
+      "16": "assets/eyebrow_raise_emoji.png",
+      "24": "assets/eyebrow_raise_emoji.png",
+      "32": "assets/eyebrow_raise_emoji.png"
+    },
+    "default_title": "My Productivity",
+    "default_popup": "popup.html"
+  },
+  "manifest_version": 3
+}
