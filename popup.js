@@ -1,3 +1,8 @@
+// TODO: Move the calculation to background.js so that we don't need to store every website. 
+// Make background.js store a cache of websites and whether they are a distraction so we don't constantly use resources to calculate.
+// Figure out what we need to store in chrome.storage.sync for maximum functionality
+
+
 function evaluateWhetherDistraction(tab_url, tab_title) {
   if (tab_url.includes("youtube.com")) {
     return true;
