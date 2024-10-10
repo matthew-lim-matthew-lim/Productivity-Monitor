@@ -19,8 +19,40 @@ let cache = {};
 // Update the storage with the information of the currently focused tab
 async function focusTabUpdate(tab) {
   if (tab.url) {
-    let result = await chrome.storage.sync.get("time_used");
-    let data = result.time_used || [];
+    let local_storage_data = await chrome.storage.local.get("trackingData");
+    let data = local_storage_data.trackingData || {
+      time_productive_per_site: {
+      },
+      time_distracted_per_site: {
+      },
+      productive_times: {
+        "day_0": [],
+        "day_1": [],
+        "day_2": [],
+        "day_3": [],
+        "day_4": [],
+        "day_5": [],
+        "day_6": []
+      },
+      distracted_times: {
+        "day_0": [],
+        "day_1": [],
+        "day_2": [],
+        "day_3": [],
+        "day_4": [],
+        "day_5": [],
+        "day_6": []
+      },
+      logoff_times: {
+        "day_0": [],
+        "day_1": [],
+        "day_2": [],
+        "day_3": [],
+        "day_4": [],
+        "day_5": [],
+        "day_6": []
+      }
+    };
 
     const now_time = new Date();
 
@@ -36,7 +68,8 @@ async function focusTabUpdate(tab) {
 
     console.log(data);
 
-    await chrome.storage.sync.set({ time_used: data });
+    // await chrome.storage.sync.set({ time_used: data });
+    await chrome.storage.local.set({ trackingData: data });
   }
 }
 

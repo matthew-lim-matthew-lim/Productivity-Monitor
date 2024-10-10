@@ -1,6 +1,7 @@
 // TODO: Move the calculation to background.js so that we don't need to store every website. 
 // Make background.js store a cache of websites and whether they are a distraction so we don't constantly use resources to calculate.
 // Figure out what we need to store in chrome.storage.sync for maximum functionality
+// Properly calculate the time spent (parsing the Date objects)
 
 
 function evaluateWhetherDistraction(tab_url, tab_title) {
