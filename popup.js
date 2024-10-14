@@ -46,12 +46,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log(data);
     const colors = ["#4682B4", "#FF6347"];
     drawPieChart(data, colors);
+
+    // Draw horizontal bar chart with the sorted segments
+    let local_storage_data = await chrome.storage.local.get("trackingData");
+    let local_data = local_storage_data.trackingData;
+
+    const allTimes = mergeAndSortTimes(local_data.productive_times[0], local_data.distracted_times[0], local_data.logoff_times[0]);
+    createBarChart(allTimes);
   });
 });
 
+// Pie Chart
 function drawPieChart(data, colors) {
   const svgNS = "http://www.w3.org/2000/svg";
-  const chart = document.getElementById('chart');
+  const chart = document.getElementById('pie-chart');
   chart.innerHTML = ''; // Clear previous chart
   const width = 300;
   const height = 300;
@@ -102,5 +110,56 @@ function drawPieChart(data, colors) {
           path.setAttribute("fill", colors[index]);
           svg.appendChild(path);
       });
+  }
+}
+
+// Horizontal Bar Graph
+function mergeAndSortTimes(productiveTimes, distractedTimes, logoffTimes) {
+  const allTimes = [];
+
+  productiveTimes.forEach(time => {
+      allTimes.push({ time: new Date(time), label: 'Productive' });
+  });
+  distractedTimes.forEach(time => {
+      allTimes.push({ time: new Date(time), label: 'Distracted' });
+  });
+  logoffTimes.forEach(time => {
+      allTimes.push({ time: new Date(time), label: 'Logoff' });
+  });
+
+  // Sort all times by date
+  allTimes.sort((a, b) => a.time - b.time);
+  console.log(allTimes);
+  return allTimes;
+}
+
+// Function to create a segmented horizontal bar chart
+function createBarChart(data) {
+  const chart = document.getElementById('horizontal-bar-chart');
+  chart.innerHTML = ''; // Clear previous chart
+
+  let totalDuration = 0;
+  for (let i = 1; i < data.length; i++) {
+      totalDuration += (data[i].time - data[i - 1].time) / 1000; // Calculate total duration in seconds
+  }
+
+  for (let i = 1; i < data.length; i++) {
+      const duration = (data[i].time - data[i - 1].time) / 1000;
+      const segmentDiv = document.createElement('div');
+      segmentDiv.classList.add('segment');
+      segmentDiv.style.width = `${(duration / totalDuration) * 100}%`;
+
+      if (data[i - 1].label === 'Productive') {
+        segmentDiv.style.backgroundColor = '#4682B4';
+      } else if (data[i - 1].label === 'Distracted') {
+        segmentDiv.style.backgroundColor = '#FF6347';
+      } else {
+        segmentDiv.style.backgroundColor = '#D3D3D3';
+      }
+
+      // Add a tooltip for each segment
+      segmentDiv.title = `${data[i - 1].label}: ${duration} seconds`;
+
+      chart.appendChild(segmentDiv);
   }
 }
