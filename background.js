@@ -128,7 +128,7 @@ export async function focusTabUpdate(tab) {
     }
   
     // If last time was distracted, then add to total_distracted.
-    if (logoff_last &&distracted_last > productive_last && distracted_last > logoff_last) {
+    if (logoff_last && distracted_last > productive_last && distracted_last > logoff_last) {
       cloud_data.total_time_distracted[0] += Math.floor((new Date(now_time) - distracted_last) / 1000);
     }
   
