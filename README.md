@@ -107,3 +107,8 @@ WIP
 **Thoughts**
 
 - Maybe syncing across devices is too hard?
+
+**Notes:**
+
+- Using `"background": { "type": "module" }` allows us to import and export.
+  - https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics
