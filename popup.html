@@ -3,15 +3,29 @@
 
 <div class="container">
   <div>
-    <div class="title">Your time usage:</div>
+    <div class="title">How you used your time today:</div>
 
-    <div class="title">Time Productive:</div>
-    <div class="time_productive" id="time_productive"></div>
+    <div style="display: flex; flex-direction: row;">
+      <!-- Pie Chart Section -->
+      <div id="pie-chart" style="flex: 1;"></div>
 
-    <div class="title">Time Distracted:</div>
-    <div class="time_distracted" id="time_distracted"></div>
+      <!-- Time Summary Section -->
+      <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div class="title">Time Productive:</div>
+          <div class="time_productive" id="time_productive"></div>
+          <div class="percent_time_productive" id="percent_time_productive"></div>
+        </div>
 
-    <div id="pie-chart"></div>
+        <div style="text-align: center;">
+          <div class="title">Time Distracted:</div>
+          <div class="time_distracted" id="time_distracted"></div>
+          <div class="percent_time_distracted" id="percent_time_distracted"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="title">Your time usage throughout the day:</div>
 
     <div id="horizontal-bar-chart"></div>
   </div>

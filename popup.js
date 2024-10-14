@@ -25,19 +25,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     let cloud_data = cloud_storage_data.trackingData;
     
     console.log(cloud_data);
+
+    // Calculate percentage time productive/distracted.
+    let totalTime = 0;
+    totalTime += cloud_data.total_time_productive ? cloud_data.total_time_productive[0] : 0;
+    totalTime += cloud_data.total_time_distracted ? cloud_data.total_time_distracted[0] : 0;
     
-    // Calculate the total productive time
+    // Display metrics for productive time
     const productiveElement = document.getElementById("time_productive");
+    const percentProductiveElement = document.getElementById("percent_time_productive");
     if (cloud_data.total_time_productive && cloud_data.total_time_productive[0] > 0) {
       productiveElement.innerHTML = '<i class="row">' + parseHoursMinsSecs(cloud_data.total_time_productive[0]) + '</i>';
+      percentProductiveElement.innerHTML = '<i class="row">' + Math.floor(cloud_data.total_time_productive[0]  / totalTime * 100) + '% of your time</i>';
     } else {
       productiveElement.innerHTML = '<i class="row">No time was spent being productive!</i>';
     }
   
-    // Calculate the total distracted time
+    // Display metrics for distracted time
     const distractedElement = document.getElementById("time_distracted");
+    const percentDistractedElement = document.getElementById("percent_time_distracted");
     if (cloud_data.total_time_distracted && cloud_data.total_time_distracted[0] > 0) {
       distractedElement.innerHTML = '<i class="row">' + parseHoursMinsSecs(cloud_data.total_time_distracted[0]) + '</i>';
+      percentDistractedElement.innerHTML = '<i class="row">' + Math.floor(cloud_data.total_time_distracted[0] / totalTime * 100) + '% of your time</i>';
     } else {
       distractedElement.innerHTML = '<i class="row">No time was spent being distracted!</i>';
     }
