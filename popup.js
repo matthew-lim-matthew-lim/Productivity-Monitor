@@ -51,15 +51,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       distractedElement.innerHTML = '<i class="row">No time was spent being distracted!</i>';
     }
     
+    // Draw Pie Chart
     const data = [ cloud_data.total_time_productive[0], cloud_data.total_time_distracted[0] ];
     console.log(data);
     const colors = ["#4682B4", "#FF6347"];
     drawPieChart(data, colors);
 
-    // Draw horizontal bar chart with the sorted segments
+    // Get the checkbox for whether the inactive time is hidden or shown
     let local_storage_data = await chrome.storage.local.get("trackingData");
     let local_data = local_storage_data.trackingData;
 
+    const checkbox_hide_inactive_time = document.getElementById("checkbox-hide-inactive-time");
+    checkbox_hide_inactive_time.checked = local_data.UI_hide_inactive_times;
+    checkbox_hide_inactive_time.addEventListener('change', async function() {
+      local_data.UI_hide_inactive_times = checkbox_hide_inactive_time.checked;
+      await chrome.storage.local.set({ trackingData: local_data });
+
+      // Draw horizontal bar chart with the sorted segments
+      const allTimes = mergeAndSortTimes(local_data.productive_times[0], local_data.distracted_times[0], local_data.logoff_times[0]);
+      createBarChart(allTimes);
+    });
+
+    // Draw horizontal bar chart with the sorted segments
     const allTimes = mergeAndSortTimes(local_data.productive_times[0], local_data.distracted_times[0], local_data.logoff_times[0]);
     createBarChart(allTimes);
   });
@@ -147,28 +160,38 @@ function createBarChart(data) {
   const chart = document.getElementById('horizontal-bar-chart');
   chart.innerHTML = ''; // Clear previous chart
 
+  const checkbox_hide_inactive_time = document.getElementById("checkbox-hide-inactive-time");
   let totalDuration = 0;
   for (let i = 1; i < data.length; i++) {
+    if (!(data[i - 1].label === 'Logoff' && 
+      checkbox_hide_inactive_time.checked)
+    ) {
       totalDuration += (data[i].time - data[i - 1].time) / 1000; // Calculate total duration in seconds
+    }
   }
 
   for (let i = 1; i < data.length; i++) {
-      const duration = (data[i].time - data[i - 1].time) / 1000;
-      const segmentDiv = document.createElement('div');
-      segmentDiv.classList.add('segment');
-      segmentDiv.style.width = `${(duration / totalDuration) * 100}%`;
+    if (data[i - 1].label === 'Logoff' && 
+      checkbox_hide_inactive_time.checked
+    ) {
+      continue;
+    }
+    const duration = (data[i].time - data[i - 1].time) / 1000;
+    const segmentDiv = document.createElement('div');
+    segmentDiv.classList.add('segment');
+    segmentDiv.style.width = `${(duration / totalDuration) * 100}%`;
 
-      if (data[i - 1].label === 'Productive') {
-        segmentDiv.style.backgroundColor = '#4682B4';
-      } else if (data[i - 1].label === 'Distracted') {
-        segmentDiv.style.backgroundColor = '#FF6347';
-      } else {
-        segmentDiv.style.backgroundColor = '#D3D3D3';
-      }
+    if (data[i - 1].label === 'Productive') {
+      segmentDiv.style.backgroundColor = '#4682B4';
+    } else if (data[i - 1].label === 'Distracted') {
+      segmentDiv.style.backgroundColor = '#FF6347';
+    } else {
+      segmentDiv.style.backgroundColor = '#D3D3D3';
+    }
 
-      // Add a tooltip for each segment
-      segmentDiv.title = `${data[i - 1].label}: ${duration} seconds`;
+    // Add a tooltip for each segment
+    segmentDiv.title = `${data[i - 1].label}: ${duration} seconds`;
 
-      chart.appendChild(segmentDiv);
+    chart.appendChild(segmentDiv);
   }
 }

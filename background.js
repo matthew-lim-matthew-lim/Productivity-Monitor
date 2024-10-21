@@ -68,7 +68,8 @@ export async function focusTabUpdate(tab) {
     },
     productive_times: [[], [], [], [], [], [], []],
     distracted_times: [[], [], [], [], [], [], []],
-    logoff_times: [[], [], [], [], [], [], []]
+    logoff_times: [[], [], [], [], [], [], []],
+    UI_hide_inactive_times: false
   };
 
   // Shift the data for the past week down
