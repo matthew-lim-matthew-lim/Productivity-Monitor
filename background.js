@@ -74,9 +74,9 @@ export async function focusTabUpdate(tab) {
   // Shift the data for the past week down
   if (new Date(cloud_data.day_0_date).getDate() != now_time.getDate()) {
     console.log("new date");
-    const dayDifference = getDayDifference(new Date(cloud_data.day_0_date).getDate(), now_time.getDate());
+    const dayDifference = getDayDifference(new Date(cloud_data.day_0_date), now_time);
     console.log(dayDifference);
-    for (let currDayIndex = 0; currDayIndex < 7; i++) {
+    for (let currDayIndex = 0; currDayIndex < 7; currDayIndex++) {
       if (currDayIndex + dayDifference < 7) {
         // Shift the cloud data for the past week down
         cloud_data.total_time_productive[currDayIndex + dayDifference] = cloud_data.total_time_productive[currDayIndex]; 
@@ -90,9 +90,14 @@ export async function focusTabUpdate(tab) {
         local_data.distracted_times[currDayIndex + dayDifference] = structuredClone(local_data.distracted_times[currDayIndex]); 
         local_data.distracted_times[currDayIndex] = [];
       }
+      cloud_data.total_time_productive[currDayIndex] = 0;
+      cloud_data.total_time_distracted[currDayIndex] = 0;
+
+      local_data.productive_times[currDayIndex] = [];
+      local_data.distracted_times[currDayIndex] = [];
     }
 
-    cloud_data.day_0_date = structuredClone(now_time);
+    cloud_data.day_0_date = now_time.toString();
   }
   // Add to total time if applicable
   // Find the last (previously logged) time (only need to query the last index of 3 arrays).
