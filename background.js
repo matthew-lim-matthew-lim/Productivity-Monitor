@@ -1,3 +1,11 @@
+const Statuses = Object.freeze({
+  PRODUCTIVE: 'productive',
+  DISTRACTED: 'distracted',
+  LOGOFF: 'logoff',
+});
+
+let currStatus = Statuses.LOGOFF;
+
 // If a tab is updated (eg. searching a page, log that tab)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   // Only Log if info changed
@@ -22,10 +30,45 @@ chrome.runtime.onSuspend.addListener(async () => {
   await focusTabUpdate(null_tab);
 });
 
+// When the window focus changes
+chrome.windows.onFocusChanged.addListener(async (windowId) => {
+  if (windowId === chrome.windows.WINDOW_ID_NONE) {
+    // No focused window (e.g., user switched to another app or minimized browser)
+    const null_tab = {
+      url: null
+    };
+    await focusTabUpdate(null_tab);
+  } else {
+    // Browser window has focus again, get the active tab in the focused window
+    const [activeTab] = await chrome.tabs.query({ active: true, windowId });
+    if (activeTab) {
+      await focusTabUpdate(activeTab);
+    }
+  }
+});
+
+
+// Check if the window is out of focus in intervals
+setInterval(checkBrowserFocus, 1000);  
+function checkBrowserFocus(){
+    chrome.windows.getCurrent(async function(browser){
+      // If the browser is not focused, log it as logoff (if the current status isn't already loggoff)
+      if (!browser.focused && currStatus != Statuses.LOGOFF) {
+        const null_tab = {
+          url: null
+        };
+        await focusTabUpdate(null_tab);
+        currStatus = Statuses.LOGOFF;
+      }
+    })
+}
+
 function evaluateWhetherDistraction(tab_url, tab_title = null) {
   if (tab_url.includes("youtube.com")) {
+    currStatus = Statuses.DISTRACTED;
     return true;
   } else {
+    currStatus = Statuses.PRODUCTIVE;
     return false;
   }
 }
