@@ -112,3 +112,4 @@ WIP
 
 - Using `"background": { "type": "module" }` allows us to import and export.
   - https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics
+- I wanna use CosmosDB for keeping track of what websites and URLs count as distractions
