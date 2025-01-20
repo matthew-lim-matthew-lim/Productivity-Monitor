@@ -99,6 +99,7 @@ Cache Data Structure
 ```cpp
 WIP
 ```
+
 **Cloud stuff**
 - Deciding between Google Firebase or Azure CosmosDB
   - CosmosDB is tempting as students have Azure credit for Education, and since I use it at my internship (at Prospa).
