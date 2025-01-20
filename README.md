@@ -99,10 +99,17 @@ Cache Data Structure
 ```cpp
 WIP
 ```
+**Cloud stuff**
+- Deciding between Google Firebase or Azure CosmosDB
+  - CosmosDB is tempting as students have Azure credit for Education, and since I use it at my internship (at Prospa).
+  - Firebase has a free teir and is very simple. Could be a good option since this extension is small.
+
 
 **Final Data Solution**
 
-- Likely more complex since it needs to store more data on the cloud. Requires a my own backend.
+- Likely more complex since it needs to store more data on the cloud. Will likely require the extension to have a server.
+
+
 
 **Thoughts**
 
