@@ -1,3 +1,58 @@
+// Import Firebase
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+
+// Initialize Firebase
+const firebaseApp = initializeApp({
+  apiKey: "AIzaSyDg-eVg_jsmKjlKhZH5Inoex0zIAIImw90",
+  authDomain: "productivity-monitor-8715c.firebaseapp.com",
+  projectId: "productivity-monitor-8715c",
+  storageBucket: "productivity-monitor-8715c.firebasestorage.app",
+  messagingSenderId: "284347340210",
+  appId: "1:284347340210:web:7d89126f7aba259528c0ab",
+  measurementId: "G-DYRVQB3QDW"
+});
+var db = getFirestore(firebaseApp);
+
+function dbAddUrl(distractionState) {
+  var data = document.getElementById("dataValue").value;
+  dbAlreadyClassified(data).then((isClassified) => {
+    if (isClassified) {
+      console.error("URL already classified:", data);
+      return;
+    }
+    console.log("Adding non-distracting URL:", data);
+    db.collection('/urls').add({
+      url: data,
+      distraction: distractionState
+    }).then((docRef) => {
+      console.log("Document written with ID:", docRef.id);
+    }).catch((error) => {
+      console.error("Error adding document:", error);
+    });
+  });
+}
+
+function dbSeeUrl() {
+  var data = document.getElementById("dataValue").value;
+  db.collection('/urls').where('url', '==', data)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        console.log(data, ' is distracting: ', doc.data().distraction);
+      })
+    })
+}
+
+function dbAlreadyClassified(data) {
+  return db.collection('/urls').where('url', '==', data)
+  .get()
+  .then((querySnapshot) => {
+    console.log("query snapshot size: " + querySnapshot.size);
+    return querySnapshot.size > 0;
+  })
+}
+
 const Statuses = Object.freeze({
   PRODUCTIVE: 'productive',
   DISTRACTED: 'distracted',
@@ -188,6 +243,7 @@ export async function focusTabUpdate(tab) {
   // If it is a logoff record, it tab.url will be null.
   if (tab.url) {
     // Determine if distracting or not
+    console.log(tab.url, " ", tab.title);
     if (evaluateWhetherDistraction(tab.url, tab.title)) {
       // It is distracting
       local_data.distracted_times[0].push(now_time.toString());

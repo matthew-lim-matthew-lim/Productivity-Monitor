@@ -11,7 +11,7 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "dist/background.bundle.js",
     "type": "module"
   },
   "action": {
@@ -21,7 +21,7 @@
       "32": "assets/eyebrow_raise_emoji.png"
     },
     "default_title": "My Productivity",
-    "default_popup": "popup.html"
+    "default_popup": "src/popup.html"
   },
   "manifest_version": 3
 }

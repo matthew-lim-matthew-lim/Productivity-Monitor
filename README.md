@@ -121,3 +121,10 @@ WIP
 - Using `"background": { "type": "module" }` allows us to import and export.
   - https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics
 - I wanna use CosmosDB for keeping track of what websites and URLs count as distractions
+
+**`webpack` module bundling**
+- Webpack is a module bundler which allows JS modules to be used in the chrome extension. It is necessary because Manifest V3 does not allow dynamic imports or eval for increased security, requiring all modules to be bundled into a single file or a set of static files.
+- `npx webpack` to generate the distribution version of the files.
+
+**Tech Used:**
+- Firebase Firestore
