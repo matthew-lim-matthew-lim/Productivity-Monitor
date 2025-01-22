@@ -9,8 +9,8 @@ const firebaseApp = initializeApp({
   projectId: "productivity-monitor-8715c",
   storageBucket: "productivity-monitor-8715c.firebasestorage.app",
   messagingSenderId: "284347340210",
-  appId: "1:284347340210:web:7d89126f7aba259528c0ab",
-  measurementId: "G-DYRVQB3QDW"
+  appId: "1:284347340210:web:6e1e5808272348a228c0ab",
+  measurementId: "G-SHK3YKGFBJ"
 });
 var db = getFirestore(firebaseApp);
 
