@@ -1,6 +1,6 @@
 // Import Firebase
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, query, where } from "firebase/firestore";
 
 // Initialize Firebase
 const firebaseApp = initializeApp({
@@ -14,43 +14,42 @@ const firebaseApp = initializeApp({
 });
 var db = getFirestore(firebaseApp);
 
-function dbAddUrl(distractionState) {
-  var data = document.getElementById("dataValue").value;
-  dbAlreadyClassified(data).then((isClassified) => {
-    if (isClassified) {
-      console.error("URL already classified:", data);
-      return;
-    }
-    console.log("Adding non-distracting URL:", data);
-    db.collection('/urls').add({
-      url: data,
-      distraction: distractionState
-    }).then((docRef) => {
-      console.log("Document written with ID:", docRef.id);
-    }).catch((error) => {
-      console.error("Error adding document:", error);
+// Adding a document to Firestore
+async function dbAddUrl(tabUrl, tabTitle, distractionState) {
+  const urlsCollection = collection(db, "urls");
+  const isClassified = await dbAlreadyClassified(tabUrl);
+  if (isClassified) return;
+
+  try {
+    const docRef = await addDoc(urlsCollection, {
+      url: tabUrl,
+      title: tabTitle,
+      distraction: distractionState,
     });
+    console.log("Document written with ID:", docRef.id);
+  } catch (error) {
+    console.error("Error adding document:", error);
+  }
+}
+
+// Querying Firestore
+async function dbSeeUrl(tabUrl) {
+  const urlsCollection = collection(db, "urls");
+  const q = query(urlsCollection, where("url", "==", tabUrl));
+  const querySnapshot = await getDocs(q);
+  querySnapshot.forEach((doc) => {
+    console.log(
+      `${tabUrl} with title ${doc.data().title} is distracting: ${doc.data().distraction}`
+    );
   });
 }
 
-function dbSeeUrl() {
-  var data = document.getElementById("dataValue").value;
-  db.collection('/urls').where('url', '==', data)
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        console.log(data, ' is distracting: ', doc.data().distraction);
-      })
-    })
-}
-
-function dbAlreadyClassified(data) {
-  return db.collection('/urls').where('url', '==', data)
-  .get()
-  .then((querySnapshot) => {
-    console.log("query snapshot size: " + querySnapshot.size);
-    return querySnapshot.size > 0;
-  })
+// Check if URL is already classified
+async function dbAlreadyClassified(tabUrl) {
+  const urlsCollection = collection(db, "urls");
+  const q = query(urlsCollection, where("url", "==", tabUrl));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.size > 0;
 }
 
 const Statuses = Object.freeze({
@@ -118,11 +117,13 @@ function checkBrowserFocus(){
     })
 }
 
-function evaluateWhetherDistraction(tab_url, tab_title = null) {
-  if (tab_url.includes("youtube.com")) {
+function evaluateWhetherDistraction(tabUrl, tabTitle = null) {
+  if (tabUrl.includes("youtube.com")) {
+    dbAddUrl(tabUrl, tabTitle, true);
     currStatus = Statuses.DISTRACTED;
     return true;
   } else {
+    dbAddUrl(tabUrl, tabTitle, false);
     currStatus = Statuses.PRODUCTIVE;
     return false;
   }
@@ -257,11 +258,11 @@ export async function focusTabUpdate(tab) {
     local_data.logoff_times[0].push(now_time.toString());
   }
 
-  console.log(cloud_data);
-  console.log(local_data);
+  // console.log(cloud_data);
+  // console.log(local_data);
 
   local_data.productive_times[0].forEach((item, index) => {
-    console.log(`Index ${index}:`, item);
+    // console.log(`Index ${index}:`, item);
   }); 
 
   await chrome.storage.sync.set({ trackingData: cloud_data });
