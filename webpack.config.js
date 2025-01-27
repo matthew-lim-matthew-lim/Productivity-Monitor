@@ -28,5 +28,8 @@ module.exports = {
       },
     ],
   },
+  optimization: {
+    usedExports: true, // Enable tree-shaking
+  },
   devtool: false, 
 };

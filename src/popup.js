@@ -2,7 +2,6 @@
 // Make background.js store a cache of websites and whether they are a distraction so we don't constantly use resources to calculate.
 // Figure out what we need to store in chrome.storage.sync for maximum functionality
 // Properly calculate the time spent (parsing the Date objects)
-import { focusTabUpdate } from './background.js';
 
 function parseHoursMinsSecs(seconds) {
   let hrs = Math.floor(seconds / 3600);
@@ -14,11 +13,13 @@ function parseHoursMinsSecs(seconds) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   chrome.storage.sync.get(async () => {
-    // Update the recorded productive and distracted times
+    // Update the recorded productive and distracted times up to when the popup is opened
     await chrome.tabs.query({ active: true, currentWindow: true }, async function(tabs) {
       let activeTab = tabs[0]; // Get the first tab in the array (should be the current active tab)
       console.log("Active Tab URL:", activeTab.url);
-      await focusTabUpdate(activeTab);
+      chrome.runtime.sendMessage({ action: "focusTabUpdate", tab: activeTab }, (response) => {
+        console.log(response.status);
+      });
     });
     
     let cloud_storage_data = await chrome.storage.sync.get("trackingData");

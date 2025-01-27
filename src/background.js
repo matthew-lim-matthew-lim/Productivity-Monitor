@@ -1,6 +1,6 @@
 // Import Firebase
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, query, where, limit } from "firebase/firestore";
 
 // Initialize Firebase
 const firebaseApp = initializeApp({
@@ -14,11 +14,21 @@ const firebaseApp = initializeApp({
 });
 var db = getFirestore(firebaseApp);
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "focusTabUpdate") {
+    focusTabUpdate(message.tab);
+    sendResponse({ status: "Success" });
+  }
+});
+
 // Adding a document to Firestore
 async function dbAddUrl(tabUrl, tabTitle, distractionState) {
   const urlsCollection = collection(db, "urls");
   const isClassified = await dbAlreadyClassified(tabUrl);
-  if (isClassified) return;
+  console.log("isClassified for " + tabTitle + " is: " + isClassified);
+  if (isClassified) {
+    return;
+  }
 
   try {
     const docRef = await addDoc(urlsCollection, {
@@ -47,9 +57,9 @@ async function dbSeeUrl(tabUrl) {
 // Check if URL is already classified
 async function dbAlreadyClassified(tabUrl) {
   const urlsCollection = collection(db, "urls");
-  const q = query(urlsCollection, where("url", "==", tabUrl));
+  const q = query(urlsCollection, where("url", "==", tabUrl), limit(1));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.size > 0;
+  return !querySnapshot.empty;
 }
 
 const Statuses = Object.freeze({
