@@ -36,12 +36,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Adding a document to Firestore
 async function dbAddUrl(tabUrl, tabTitle, distractionState) {
   const urlsCollection = collection(db, "urls");
-  const isClassified = await dbAlreadyClassified(tabUrl);
-  console.log("isClassified for " + tabTitle + " is: " + isClassified);
-  if (isClassified) {
-    return;
-  }
-
   try {
     const docRef = await addDoc(urlsCollection, {
       url: tabUrl,
@@ -55,15 +49,19 @@ async function dbAddUrl(tabUrl, tabTitle, distractionState) {
 }
 
 // Querying Firestore
-async function dbSeeUrl(tabUrl) {
+async function dbFetchDistractionStatus(tabUrl) {
   const urlsCollection = collection(db, "urls");
-  const q = query(urlsCollection, where("url", "==", tabUrl));
+  const q = query(urlsCollection, where("url", "==", tabUrl), limit(1));
   const querySnapshot = await getDocs(q);
-  querySnapshot.forEach((doc) => {
-    console.log(
-      `${tabUrl} with title ${doc.data().title} is distracting: ${doc.data().distraction}`
-    );
-  });
+  
+  if (querySnapshot.empty) {
+    // No document matches the query
+    return false;
+  }
+
+  // Access the document
+  const doc = querySnapshot.docs[0];
+  return doc.data().distraction === true;
 }
 
 // Check if URL is already classified
@@ -140,6 +138,11 @@ function checkBrowserFocus(){
 }
 
 async function evaluateWhetherDistraction(tabUrl, tabTitle = null) {
+  const isClassified = await dbAlreadyClassified(tabUrl);
+  console.log("isClassified for " + tabTitle + " is: " + isClassified);
+  if (isClassified) {
+    return await dbFetchDistractionStatus(tabUrl);
+  }
 
   let prompt = 
   "You need to determine if this website is a distraction that helps me meet my goals. " + 
