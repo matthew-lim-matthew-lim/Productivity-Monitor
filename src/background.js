@@ -1,6 +1,18 @@
 // Import Firebase
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, getDocs, query, where, limit } from "firebase/firestore";
+import { getDeepSeekAPIKey } from "./env.js";
+
+// Import OpenAi (we use deepseek instead lol)
+import OpenAI from "openai";
+
+const apiKey = getDeepSeekAPIKey();
+
+const openai = new OpenAI({
+        baseURL: 'https://api.deepseek.com',
+        apiKey: apiKey
+});
+
 
 // Initialize Firebase
 const firebaseApp = initializeApp({
@@ -127,8 +139,24 @@ function checkBrowserFocus(){
     })
 }
 
-function evaluateWhetherDistraction(tabUrl, tabTitle = null) {
-  if (tabUrl.includes("youtube.com")) {
+async function evaluateWhetherDistraction(tabUrl, tabTitle = null) {
+
+  let prompt = 
+  "You need to determine if this website is a distraction that helps me meet my goals. " + 
+  "Give only Yes (distraction) or No (not distraction) answer." +
+  "tabUrl: " + tabUrl + 
+  "tabTitle: " + tabTitle;
+
+  const completion = await openai.chat.completions.create({
+    messages: [{ role: "system", content: prompt }],
+    model: "deepseek-chat",
+  });
+
+  let result = completion.choices[0].message.content === "Yes";
+
+  console.log(result);
+
+  if (result) {
     dbAddUrl(tabUrl, tabTitle, true);
     currStatus = Statuses.DISTRACTED;
     return true;
@@ -255,7 +283,7 @@ export async function focusTabUpdate(tab) {
   if (tab.url) {
     // Determine if distracting or not
     console.log(tab.url, " ", tab.title);
-    if (evaluateWhetherDistraction(tab.url, tab.title)) {
+    if (await evaluateWhetherDistraction(tab.url, tab.title)) {
       // It is distracting
       local_data.distracted_times[0].push(now_time.toString());
     } else {

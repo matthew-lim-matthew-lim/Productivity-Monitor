@@ -128,3 +128,6 @@ WIP
 
 **Tech Used:**
 - Firebase Firestore
+
+**Final Release To Change**
+- Use backend proxy that makes the API calls and returns the results to the extension. 
