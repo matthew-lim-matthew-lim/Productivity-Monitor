@@ -9,8 +9,8 @@ import OpenAI from "openai";
 const apiKey = getDeepSeekAPIKey();
 
 const openai = new OpenAI({
-        baseURL: 'https://api.deepseek.com',
-        apiKey: apiKey
+  baseURL: 'https://api.deepseek.com',
+  apiKey: apiKey
 });
 
 
@@ -53,7 +53,7 @@ async function dbFetchDistractionStatus(tabUrl) {
   const urlsCollection = collection(db, "urls");
   const q = query(urlsCollection, where("url", "==", tabUrl), limit(1));
   const querySnapshot = await getDocs(q);
-  
+
   if (querySnapshot.empty) {
     // No document matches the query
     return false;
@@ -89,8 +89,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 // If a tab is switched to, log that tab
-chrome.tabs.onActivated.addListener(function(activeInfo) {
-  chrome.tabs.get(activeInfo.tabId, async function(tab) {
+chrome.tabs.onActivated.addListener(function (activeInfo) {
+  chrome.tabs.get(activeInfo.tabId, async function (tab) {
     await focusTabUpdate(tab);
   });
 });
@@ -100,7 +100,7 @@ chrome.runtime.onSuspend.addListener(async () => {
   const null_tab = {
     url: null
   };
-  
+
   await focusTabUpdate(null_tab);
 });
 
@@ -123,18 +123,18 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 
 
 // Check if the window is out of focus in intervals
-setInterval(checkBrowserFocus, 1000);  
-function checkBrowserFocus(){
-    chrome.windows.getCurrent(async function(browser){
-      // If the browser is not focused, log it as logoff (if the current status isn't already loggoff)
-      if (!browser.focused && currStatus != Statuses.LOGOFF) {
-        const null_tab = {
-          url: null
-        };
-        await focusTabUpdate(null_tab);
-        currStatus = Statuses.LOGOFF;
-      }
-    })
+setInterval(checkBrowserFocus, 1000);
+function checkBrowserFocus() {
+  chrome.windows.getCurrent(async function (browser) {
+    // If the browser is not focused, log it as logoff (if the current status isn't already loggoff)
+    if (!browser.focused && currStatus != Statuses.LOGOFF) {
+      const null_tab = {
+        url: null
+      };
+      await focusTabUpdate(null_tab);
+      currStatus = Statuses.LOGOFF;
+    }
+  })
 }
 
 async function evaluateWhetherDistraction(tabUrl, tabTitle = null) {
@@ -144,11 +144,11 @@ async function evaluateWhetherDistraction(tabUrl, tabTitle = null) {
     return await dbFetchDistractionStatus(tabUrl);
   }
 
-  let prompt = 
-  "You need to determine if this website is a distraction that helps me meet my goals. " + 
-  "Give only Yes (distraction) or No (not distraction) answer." +
-  "tabUrl: " + tabUrl + 
-  "tabTitle: " + tabTitle;
+  let prompt =
+    "You need to determine if this website is a distraction that helps me meet my goals. " +
+    "Give only Yes (distraction) or No (not distraction) answer." +
+    "tabUrl: " + tabUrl +
+    "tabTitle: " + tabTitle;
 
   const completion = await openai.chat.completions.create({
     messages: [{ role: "system", content: prompt }],
@@ -196,8 +196,8 @@ export async function focusTabUpdate(tab) {
   let cloud_storage_data = await chrome.storage.sync.get("trackingData");
   let cloud_data = cloud_storage_data.trackingData || {
     day_0_date: now_time.toString(),
-    total_time_productive: [ 0, 0, 0, 0, 0, 0, 0 ], // Store seconds, since 32-bit int allows for 68 yrs max.
-    total_time_distracted: [ 0, 0, 0, 0, 0, 0, 0 ]
+    total_time_productive: [0, 0, 0, 0, 0, 0, 0], // Store seconds, since 32-bit int allows for 68 yrs max.
+    total_time_distracted: [0, 0, 0, 0, 0, 0, 0]
   }
 
   let local_storage_data = await chrome.storage.local.get("trackingData");
@@ -220,15 +220,15 @@ export async function focusTabUpdate(tab) {
     for (let currDayIndex = 0; currDayIndex < 7; currDayIndex++) {
       if (currDayIndex + dayDifference < 7) {
         // Shift the cloud data for the past week down
-        cloud_data.total_time_productive[currDayIndex + dayDifference] = cloud_data.total_time_productive[currDayIndex]; 
+        cloud_data.total_time_productive[currDayIndex + dayDifference] = cloud_data.total_time_productive[currDayIndex];
         cloud_data.total_time_productive[currDayIndex] = 0;
-        cloud_data.total_time_distracted[currDayIndex + dayDifference] = cloud_data.total_time_distracted[currDayIndex]; 
+        cloud_data.total_time_distracted[currDayIndex + dayDifference] = cloud_data.total_time_distracted[currDayIndex];
         cloud_data.total_time_distracted[currDayIndex] = 0;
 
         // Shift the local data for the past week down
-        local_data.productive_times[currDayIndex + dayDifference] = structuredClone(local_data.productive_times[currDayIndex]); 
+        local_data.productive_times[currDayIndex + dayDifference] = structuredClone(local_data.productive_times[currDayIndex]);
         local_data.productive_times[currDayIndex] = [];
-        local_data.distracted_times[currDayIndex + dayDifference] = structuredClone(local_data.distracted_times[currDayIndex]); 
+        local_data.distracted_times[currDayIndex + dayDifference] = structuredClone(local_data.distracted_times[currDayIndex]);
         local_data.distracted_times[currDayIndex] = [];
       }
       cloud_data.total_time_productive[currDayIndex] = 0;
@@ -272,12 +272,12 @@ export async function focusTabUpdate(tab) {
     if (productive_last && productive_last > distracted_last && productive_last > logoff_last) {
       cloud_data.total_time_productive[0] += Math.floor((new Date(now_time) - productive_last) / 1000);
     }
-  
+
     // If last time was distracted, then add to total_distracted.
     if (logoff_last && distracted_last > productive_last && distracted_last > logoff_last) {
       cloud_data.total_time_distracted[0] += Math.floor((new Date(now_time) - distracted_last) / 1000);
     }
-  
+
     // If last time was logoff, then don't add to anything.
   }
 
@@ -304,7 +304,7 @@ export async function focusTabUpdate(tab) {
 
   local_data.productive_times[0].forEach((item, index) => {
     // console.log(`Index ${index}:`, item);
-  }); 
+  });
 
   await chrome.storage.sync.set({ trackingData: cloud_data });
   await chrome.storage.local.set({ trackingData: local_data });
