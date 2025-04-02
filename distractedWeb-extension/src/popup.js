@@ -14,34 +14,34 @@ function parseHoursMinsSecs(seconds) {
 document.addEventListener("DOMContentLoaded", async () => {
   chrome.storage.sync.get(async () => {
     // Update the recorded productive and distracted times up to when the popup is opened
-    await chrome.tabs.query({ active: true, currentWindow: true }, async function(tabs) {
+    await chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
       let activeTab = tabs[0]; // Get the first tab in the array (should be the current active tab)
       console.log("Active Tab URL:", activeTab.url);
       chrome.runtime.sendMessage({ action: "focusTabUpdate", tab: activeTab }, (response) => {
         console.log(response.status);
       });
     });
-    
+
     let cloud_storage_data = await chrome.storage.sync.get("trackingData");
     let cloud_data = cloud_storage_data.trackingData;
-    
+
     console.log(cloud_data);
 
     // Calculate percentage time productive/distracted.
     let totalTime = 0;
     totalTime += cloud_data.total_time_productive ? cloud_data.total_time_productive[0] : 0;
     totalTime += cloud_data.total_time_distracted ? cloud_data.total_time_distracted[0] : 0;
-    
+
     // Display metrics for productive time
     const productiveElement = document.getElementById("time_productive");
     const percentProductiveElement = document.getElementById("percent_time_productive");
     if (cloud_data.total_time_productive && cloud_data.total_time_productive[0] > 0) {
       productiveElement.innerHTML = '<i class="row">' + parseHoursMinsSecs(cloud_data.total_time_productive[0]) + '</i>';
-      percentProductiveElement.innerHTML = '<i class="row">' + Math.floor(cloud_data.total_time_productive[0]  / totalTime * 100) + '% of your time</i>';
+      percentProductiveElement.innerHTML = '<i class="row">' + Math.floor(cloud_data.total_time_productive[0] / totalTime * 100) + '% of your time</i>';
     } else {
       productiveElement.innerHTML = '<i class="row">No time was spent being productive!</i>';
     }
-  
+
     // Display metrics for distracted time
     const distractedElement = document.getElementById("time_distracted");
     const percentDistractedElement = document.getElementById("percent_time_distracted");
@@ -51,9 +51,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       distractedElement.innerHTML = '<i class="row">No time was spent being distracted!</i>';
     }
-    
+
     // Draw Pie Chart
-    const data = [ cloud_data.total_time_productive[0], cloud_data.total_time_distracted[0] ];
+    const data = [cloud_data.total_time_productive[0], cloud_data.total_time_distracted[0]];
     console.log(data);
     const colors = ["#4682B4", "#FF6347"];
     drawPieChart(data, colors);
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const checkbox_hide_inactive_time = document.getElementById("checkbox-hide-inactive-time");
     checkbox_hide_inactive_time.checked = local_data.UI_hide_inactive_times;
-    checkbox_hide_inactive_time.addEventListener('change', async function() {
+    checkbox_hide_inactive_time.addEventListener('change', async function () {
       local_data.UI_hide_inactive_times = checkbox_hide_inactive_time.checked;
       await chrome.storage.local.set({ trackingData: local_data });
 
@@ -93,46 +93,46 @@ function drawPieChart(data, colors) {
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   chart.appendChild(svg);
-  
+
   function createSingleColorCircle(color) {
-      const circle = document.createElementNS(svgNS, "circle");
-      circle.setAttribute("cx", width / 2);
-      circle.setAttribute("cy", height / 2);
-      circle.setAttribute("r", radius);
-      circle.setAttribute("fill", color); // Light grey color
-      svg.appendChild(circle);
+    const circle = document.createElementNS(svgNS, "circle");
+    circle.setAttribute("cx", width / 2);
+    circle.setAttribute("cy", height / 2);
+    circle.setAttribute("r", radius);
+    circle.setAttribute("fill", color); // Light grey color
+    svg.appendChild(circle);
   }
 
   if (total === 0) {
-      // Draw grey circle if total is 0
-      createSingleColorCircle("#d3d3d3");
+    // Draw grey circle if total is 0
+    createSingleColorCircle("#d3d3d3");
   } else {
-      data.forEach((value, index) => {
-          if (value === total) {
-            createSingleColorCircle(colors[index]);
-            return;
-          }
-          const sliceAngle = (value / total) * 2 * Math.PI;
-          
-          const x1 = width / 2 + radius * Math.cos(currentAngle);
-          const y1 = height / 2 + radius * Math.sin(currentAngle);
-          currentAngle += sliceAngle;
-          const x2 = width / 2 + radius * Math.cos(currentAngle);
-          const y2 = height / 2 + radius * Math.sin(currentAngle);
-          const largeArcFlag = sliceAngle > Math.PI ? 1 : 0;
+    data.forEach((value, index) => {
+      if (value === total) {
+        createSingleColorCircle(colors[index]);
+        return;
+      }
+      const sliceAngle = (value / total) * 2 * Math.PI;
 
-          const pathData = [
-              `M ${width / 2} ${height / 2}`,
-              `L ${x1} ${y1}`,
-              `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-              'Z'
-          ].join(' ');
+      const x1 = width / 2 + radius * Math.cos(currentAngle);
+      const y1 = height / 2 + radius * Math.sin(currentAngle);
+      currentAngle += sliceAngle;
+      const x2 = width / 2 + radius * Math.cos(currentAngle);
+      const y2 = height / 2 + radius * Math.sin(currentAngle);
+      const largeArcFlag = sliceAngle > Math.PI ? 1 : 0;
 
-          const path = document.createElementNS(svgNS, "path");
-          path.setAttribute("d", pathData);
-          path.setAttribute("fill", colors[index]);
-          svg.appendChild(path);
-      });
+      const pathData = [
+        `M ${width / 2} ${height / 2}`,
+        `L ${x1} ${y1}`,
+        `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+        'Z'
+      ].join(' ');
+
+      const path = document.createElementNS(svgNS, "path");
+      path.setAttribute("d", pathData);
+      path.setAttribute("fill", colors[index]);
+      svg.appendChild(path);
+    });
   }
 }
 
@@ -141,13 +141,13 @@ function mergeAndSortTimes(productiveTimes, distractedTimes, logoffTimes) {
   const allTimes = [];
 
   productiveTimes.forEach(time => {
-      allTimes.push({ time: new Date(time), label: 'Productive' });
+    allTimes.push({ time: new Date(time), label: 'Productive' });
   });
   distractedTimes.forEach(time => {
-      allTimes.push({ time: new Date(time), label: 'Distracted' });
+    allTimes.push({ time: new Date(time), label: 'Distracted' });
   });
   logoffTimes.forEach(time => {
-      allTimes.push({ time: new Date(time), label: 'Logoff' });
+    allTimes.push({ time: new Date(time), label: 'Logoff' });
   });
 
   // Sort all times by date
@@ -164,7 +164,7 @@ function createBarChart(data) {
   const checkbox_hide_inactive_time = document.getElementById("checkbox-hide-inactive-time");
   let totalDuration = 0;
   for (let i = 1; i < data.length; i++) {
-    if (!(data[i - 1].label === 'Logoff' && 
+    if (!(data[i - 1].label === 'Logoff' &&
       checkbox_hide_inactive_time.checked)
     ) {
       totalDuration += (data[i].time - data[i - 1].time) / 1000; // Calculate total duration in seconds
@@ -172,7 +172,7 @@ function createBarChart(data) {
   }
 
   for (let i = 1; i < data.length; i++) {
-    if (data[i - 1].label === 'Logoff' && 
+    if (data[i - 1].label === 'Logoff' &&
       checkbox_hide_inactive_time.checked
     ) {
       continue;
