@@ -61,8 +61,7 @@ tabTitle: ${tabTitle || 'N/A'}`;
             evaluatedAt: new Date(),
         });
 
-        console.log("Distraction evaluation result:");
-        console.log(responseText);
+        console.log("Distraction evaluation result for " + tabUrl + ": " + responseText);
 
         res.json({ distraction: isDistraction });
     } catch (error) {
