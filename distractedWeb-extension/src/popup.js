@@ -85,6 +85,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Draw horizontal bar chart with the sorted segments
     const allTimes = mergeAndSortTimes(local_data.productive_times[0], local_data.distracted_times[0], local_data.logoff_times[0]);
     createBarChart(allTimes);
+
+    createLineGraphForDays(local_data, 1);
   });
 });
 
@@ -205,3 +207,92 @@ function createBarChart(data) {
     chart.appendChild(segmentDiv);
   }
 }
+
+// Weekly Chart
+// Function to create or update the line graph for a given number of days
+function createLineGraphForDays(local_data, numDays) {
+  // Combine tracking data for the selected number of days
+  let productiveEvents = [];
+  let distractedEvents = [];
+  let logoffEvents = [];
+
+  // Loop over the day arrays from 0 to (numDays - 1)
+  for (let day = 0; day < numDays; day++) {
+    if (local_data.productive_times[day]) {
+      productiveEvents = productiveEvents.concat(
+        local_data.productive_times[day].map(ts => new Date(ts))
+      );
+    }
+    if (local_data.distracted_times[day]) {
+      distractedEvents = distractedEvents.concat(
+        local_data.distracted_times[day].map(ts => new Date(ts))
+      );
+    }
+    if (local_data.logoff_times[day]) {
+      logoffEvents = logoffEvents.concat(
+        local_data.logoff_times[day].map(ts => new Date(ts))
+      );
+    }
+  }
+
+  // Sort the events by time
+  productiveEvents.sort((a, b) => a - b);
+  distractedEvents.sort((a, b) => a - b);
+  logoffEvents.sort((a, b) => a - b);
+
+  // Get the min and max time for the X-axis scale
+  const minTime = Math.min(...productiveEvents.concat(distractedEvents).concat(logoffEvents).map(date => date.getTime()));
+  const maxTime = Math.max(...productiveEvents.concat(distractedEvents).concat(logoffEvents).map(date => date.getTime()));
+
+  // Get the canvas context
+  const canvas = document.getElementById('line-chart');
+  const ctx = canvas.getContext('2d');
+
+  // Function to convert Date to X-axis position (in pixels)
+  function getXPos(time) {
+    const timeRange = maxTime - minTime;
+    return ((time - minTime) / timeRange) * canvas.width;
+  }
+
+  // Function to scale the Y-axis values
+  function getYPos(value, maxValue) {
+    return canvas.height - (value / maxValue) * canvas.height;
+  }
+
+  // Function to plot lines
+  function plotLine(data, color) {
+    ctx.beginPath();
+    // Set starting point
+    ctx.moveTo(getXPos(data[0].getTime()), getYPos(1, 1));
+
+    // Iterate through data points to plot the line
+    data.forEach((time, index) => {
+      ctx.lineTo(getXPos(time.getTime()), getYPos(index + 1, data.length));
+    });
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Plot productive, distracted, and logoff events on the Canvas
+  plotLine(productiveEvents, 'blue');  // Productive in blue
+  plotLine(distractedEvents, 'red');  // Distracted in red
+  plotLine(logoffEvents, 'gray');     // Logoff in gray
+}
+
+
+// Set up the slider listener to update the chart when the day range changes
+document.getElementById("days-slider").addEventListener("input", async function () {
+  const numDays = Number(this.value);
+  document.getElementById("days-selected").textContent = `${numDays} Day${numDays > 1 ? 's' : ''}`;
+
+  // Fetch local tracking data and update the line graph
+  const localDataResult = await chrome.storage.local.get("trackingData");
+  const local_data = localDataResult.trackingData;
+  if (local_data) {
+    createLineGraphForDays(local_data, numDays);
+  } else {
+    console.log("No tracking data found.");
+  }
+});
