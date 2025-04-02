@@ -1,51 +1,73 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+import express from 'express';
+import { MongoClient } from 'mongodb';
+import dotenv from 'dotenv';
+import OpenAI from 'openai';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Middleware to parse JSON
 app.use(express.json());
-app.use(cors());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log("Connected to MongoDB"))
-    .catch(err => console.error("MongoDB connection error:", err));
+const client = new MongoClient(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+});
+await client.connect();
+const db = client.db('your-db-name'); // Replace with your database name
+const urlsCollection = db.collection('urls');
 
-// Define a schema and model for user data
-const userDataSchema = new mongoose.Schema({
-    url: String,
-    title: String,
-    distraction: Boolean,
-    timestamp: { type: Date, default: Date.now },
+// Initialize DeepSeek OpenAI client
+const openai = new OpenAI({
+    baseURL: 'https://api.deepseek.com',
+    apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
-const UserData = mongoose.model('UserData', userDataSchema);
-
-// API endpoint to add user data
-app.post('/api/data', async (req, res) => {
-    try {
-        const { url, title, distraction } = req.body;
-        const newData = new UserData({ url, title, distraction });
-        await newData.save();
-        res.status(201).json({ message: 'Data saved successfully', id: newData._id });
-    } catch (error) {
-        console.error("Error saving data:", error);
-        res.status(500).json({ error: 'Failed to save data' });
+// Endpoint to evaluate if a URL is distracting
+app.post('/api/evaluate', async (req, res) => {
+    const { tabUrl, tabTitle } = req.body;
+    if (!tabUrl) {
+        return res.status(400).json({ error: 'tabUrl is required' });
     }
-});
 
-// API endpoint to retrieve user data
-app.get('/api/data', async (req, res) => {
     try {
-        const data = await UserData.find().sort({ timestamp: -1 });
-        res.status(200).json(data);
+        // Check if URL is already classified in the database
+        const existingEntry = await urlsCollection.findOne({ url: tabUrl });
+        if (existingEntry) {
+            return res.json({ distraction: existingEntry.distraction });
+        }
+
+        // Prepare the prompt for DeepSeek
+        const prompt = `Determine if this website is a distraction that hinders productivity.
+Answer with only "Yes" (distracting) or "No" (not distracting).
+tabUrl: ${tabUrl}
+tabTitle: ${tabTitle || 'N/A'}`;
+
+        // Call DeepSeek API for classification
+        const completion = await openai.chat.completions.create({
+            messages: [{ role: "system", content: prompt }],
+            model: "deepseek-chat",
+        });
+
+        const responseText = completion.choices[0].message.content.trim();
+        const isDistraction = responseText === "Yes";
+
+        // Save the result in MongoDB
+        await urlsCollection.insertOne({
+            url: tabUrl,
+            title: tabTitle,
+            distraction: isDistraction,
+            evaluatedAt: new Date(),
+        });
+
+        console.log("Distraction evaluation result:");
+        console.log(responseText);
+
+        res.json({ distraction: isDistraction });
     } catch (error) {
-        console.error("Error retrieving data:", error);
-        res.status(500).json({ error: 'Failed to retrieve data' });
+        console.error("Error during distraction evaluation:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
