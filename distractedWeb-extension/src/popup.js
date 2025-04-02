@@ -12,17 +12,27 @@ function parseHoursMinsSecs(seconds) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("DOMContentLoaded");
   chrome.storage.sync.get(async () => {
     // Update the recorded productive and distracted times up to when the popup is opened
-    await chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
-      let activeTab = tabs[0]; // Get the first tab in the array (should be the current active tab)
-      console.log("Active Tab URL:", activeTab.url);
-      chrome.runtime.sendMessage({ action: "focusTabUpdate", tab: activeTab }, (response) => {
-        console.log(response.status);
-      });
-    });
+    // Might have to do this in the background.js file periodically. Doing it whenever the popup is opened 
+    // causes a delay in the popup loading.
+    // await chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
+    //   let activeTab = tabs[0]; // Get the first tab in the array (should be the current active tab)
+    //   console.log("Active Tab URL:", activeTab.url);
+    //   chrome.runtime.sendMessage({ action: "focusTabUpdate", tab: activeTab }, (response) => {
+    //     console.log(response.status);
+    //   });
+    // });
 
-    let cloud_storage_data = await chrome.storage.sync.get("trackingData");
+    console.log("Getting cloud storage data");
+
+    // Fetch both storage objects in parallel, improving performance
+    const [cloud_storage_data, local_storage_data] = await Promise.all([
+      chrome.storage.sync.get("trackingData"),
+      chrome.storage.local.get("trackingData")
+    ]);
+
     let cloud_data = cloud_storage_data.trackingData;
 
     console.log(cloud_data);
@@ -59,7 +69,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     drawPieChart(data, colors);
 
     // Get the checkbox for whether the inactive time is hidden or shown
-    let local_storage_data = await chrome.storage.local.get("trackingData");
     let local_data = local_storage_data.trackingData;
 
     const checkbox_hide_inactive_time = document.getElementById("checkbox-hide-inactive-time");
