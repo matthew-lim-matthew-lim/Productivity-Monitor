@@ -1,3 +1,21 @@
+# About this project
+
+Mid 2024, I realised that LLMs are an incredibly flexible and lightweight means of interpreting and interacting with the real world. I began this project to make a lightweight chrome extension that delineated the user's true productivity. I saw a need for this because other time trackers could not discern between distracting and educational content that was hosted on similar sites and domains. For example, YouTube can host both educational coding videos and also funny cat videos (which although fun, isn't very productive). The same is true for other sites like Medium, Reddit, and even news articles. 
+
+The basic version had a UI that depicts how the user spends their time throughout the day, both in a pie-chart and in a timeline view. It would query the GPT api to determine if a particular site was a distraction or not, doing so in a way that preserved user privacy.
+
+I then wanted to reduce the API calls, so I used Google Firebase Store to save the evaluations from GPT. At this stage, I opted to keep the app serverless to keep it as simple as possible. Also, DeepSeek released their own API which significantly reduced operational costs.
+
+In Febuary of 2025, I taught myself how to make a neural network from scratch in C++. This helped demistify a lot of machine learning concepts, and inspired me to try and move the productivity-monitor chrome extension to use ML in order to operate without prompting an LLM. I built a server for the chrome extension and hosted it on Render (a service like Heroku). I made the distraction evaluation queries route to the server and switched the database to use MongoDB. 
+
+The reason I switched to MongoDB is for a couple reasons. Firstly, Firebase is more of a serverless approach, which is what the chrome extension was transitioning away from. This adds a lot of complexity and other features that I don't need and would prefer to handle myself on the server. Firebase can also be more expensive since it has a pay-as-you-go model, whereas in MongoDB there is a free teir. Overall, MongoDB is simpler to work with and it feels more robust for my use case.
+
+However, I didn't let the Firebase evaluation data go to waste. After all, I had been collecting at least 4 month's worth of data from when I was using it before I wanted to make the server. I wrote code in `distractedWeb-ml-model` to retrieve the Firebase data, and also code to train an ML model with this data. I ultimately then added functionality to the server to use the ML model if they started it with `node index.js ML`. However, the `node index.js LLM` option is still there. Running with the LLM option saves the evaluations to MongoDB, so that further models can be trained. Running with the ML option does not, as this would result in training using data that was output from the model itself, rather than a different source.  
+
+![alt text](readme-media/image.png)
+
+# Documentation for this project
+
 ## Features to implement:
 
 - See time spent on productive websites vs unproductive websites.
