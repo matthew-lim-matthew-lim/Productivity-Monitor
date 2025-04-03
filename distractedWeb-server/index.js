@@ -209,6 +209,55 @@ app.post('/api/calculate-most-productive-time', async (req, res) => {
   });
 
 
+// EMA Time series forecast for distraction probability
+
+// Smooth time series using Exponential Moving Average
+function ema(values, alpha = 0.3) {
+  const result = [values[0]];
+  for (let i = 1; i < values.length; i++) {
+    result.push(alpha * values[i] + (1 - alpha) * result[i - 1]);
+  }
+  return result;
+}
+
+
+function getDistractionRatePerHour(data) {
+  // Aggregate hourly data
+  const hourBuckets = Array(24).fill(0).map(() => ({ distracted: 0, productive: 0 }));
+
+  for (let i = 0; i <= 6; i++) {
+    const day = `day_${i}`;
+
+    for (const ts of (data.distracted_times[day] || [])) {
+      const hour = new Date(ts).getHours();
+      hourBuckets[hour].distracted++;
+    }
+
+    for (const ts of (data.productive_times[day] || [])) {
+      const hour = new Date(ts).getHours();
+      hourBuckets[hour].productive++;
+    }
+  }
+
+  // Calculate odds of distraction
+  return hourBuckets.map(({ distracted, productive }) => {
+    const total = distracted + productive;
+    return total === 0 ? 0 : Math.round((distracted / total) * 100);
+  });
+}
+
+app.post('/api/forecast-distraction-odds', async (req, res) => {
+  const { data } = req.body;
+
+  const response = {};
+
+  response.rawRates = getDistractionRatePerHour(data);
+  response.smoothedRates = ema(response.rawRates, 0.25);
+
+  res.json(response);
+});
+
+
 // Main and initialisation
 
 // Load Vocab 
