@@ -87,6 +87,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     createBarChart(allTimes);
 
     createLineGraphForDays(local_data, 1);
+
+    runForecast(local_data);
   });
 });
 
@@ -316,6 +318,82 @@ document.getElementById("analyse-button").addEventListener("click", async () => 
     `;
   } catch (err) {
     console.error("Error calling API:", err);
-    document.getElementById("results").textContent = "An error occurred while analyzing.";
+    document.getElementById("results").textContent = "An error occurred while analysing.";
   }
 });
+
+// Time series forecast
+function drawDistractionForecastChart(rawRates, smoothedRates) {
+  const svg = document.getElementById("forecastChart");
+  svg.innerHTML = ""; // Clear before drawing
+
+  const width = 240;
+  const height = 100;
+
+  function scaleX(hour) {
+    return (hour / 23) * width;
+  }
+
+  function scaleY(percentage) {
+    return height - (percentage / 100) * height;
+  }
+
+  function plotLine(data, color) {
+    let path = "";
+    for (let i = 0; i < data.length; i++) {
+      const x = scaleX(i);
+      const y = scaleY(data[i]);
+      path += `${i === 0 ? "M" : "L"}${x},${y} `;
+    }
+
+    const pathElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathElement.setAttribute("d", path.trim());
+    pathElement.setAttribute("fill", "none");
+    pathElement.setAttribute("stroke", color);
+    pathElement.setAttribute("stroke-width", "2");
+    svg.appendChild(pathElement);
+  }
+
+  function plotDots(data, color) {
+    for (let i = 0; i < data.length; i++) {
+      const x = scaleX(i);
+      const y = scaleY(data[i]);
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", x);
+      circle.setAttribute("cy", y);
+      circle.setAttribute("r", 1.5);
+      circle.setAttribute("fill", color);
+      svg.appendChild(circle);
+    }
+  }
+
+  plotDots(rawRates, "blue");
+  plotLine(smoothedRates, "red");
+}
+
+
+async function runForecast(data) { 
+  try {
+    const response = await fetch('https://productivity-monitor.onrender.com/api/forecast-distraction-odds', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data })
+    });
+
+    const result = await response.json();
+    console.log(result);
+
+    drawDistractionForecastChart(result.rawRates, result.smoothedRates);
+
+    // Display most distracting hour
+    const peakHour = result.smoothedRates.indexOf(Math.max(...result.smoothedRates));
+    document.getElementById("forecastLabel").innerText =
+      `📈 You're most likely to get distracted at: ${peakHour}:00 (${result.smoothedRates[peakHour].toFixed(2)}% chance)\n` + 
+      `Break that trend!`;
+
+  } catch (err) {
+    console.error("Error calling API:", err);
+    document.getElementById("forecastLabel").innerText = "An error occurred while calculating distraction forecast.";
+  }
+}
