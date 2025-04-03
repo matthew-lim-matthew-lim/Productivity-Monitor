@@ -104,7 +104,7 @@ app.post('/api/evaluate', async (req, res) => {
             isDistraction = evalDistractionMLModel(tabUrl, tabTitle);
         }
 
-        console.log("Distraction evaluation result for " + tabUrl + ": " + responseText);
+        // console.log("Distraction evaluation result for " + tabUrl + ": " + responseText);
 
         res.json({ distraction: isDistraction });
     } catch (error) {
