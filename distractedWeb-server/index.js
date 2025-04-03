@@ -9,7 +9,7 @@ dotenv.config();
 
 // config
 const MODEL_PATH = 'ml-model-data/tfjs_model/model.json';
-const VOCAB_PATH = 'ml-model-data/vocab.json';
+const VOCAB_PATH = 'vocab.json';
 const SEQ_LENGTH = 100;
 
 // globals
