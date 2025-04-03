@@ -1,5 +1,7 @@
 # About this project
 
+This project aims to allow users to have an intelligent insight into their device usage habits, helping them break bad habits and being more productive with their time.
+
 Mid 2024, I realised that LLMs are an incredibly flexible and lightweight means of interpreting and interacting with the real world. I began this project to make a lightweight chrome extension that delineated the user's true productivity. I saw a need for this because other time trackers could not discern between distracting and educational content that was hosted on similar sites and domains. For example, YouTube can host both educational coding videos and also funny cat videos (which although fun, isn't very productive). The same is true for other sites like Medium, Reddit, and even news articles. 
 
 The basic version had a UI that depicts how the user spends their time throughout the day, both in a pie-chart and in a timeline view. It would query the GPT api to determine if a particular site was a distraction or not, doing so in a way that preserved user privacy.
@@ -12,9 +14,15 @@ The reason I switched to MongoDB is for a couple reasons. Firstly, Firebase is m
 
 However, I didn't let the Firebase evaluation data go to waste. After all, I had been collecting at least 4 month's worth of data from when I was using it before I wanted to make the server. I wrote code in `distractedWeb-ml-model` to retrieve the Firebase data, and also code to train an ML model with this data. I ultimately then added functionality to the server to use the ML model if they started it with `node index.js ML`. However, the `node index.js LLM` option is still there. Running with the LLM option saves the evaluations to MongoDB, so that further models can be trained. Running with the ML option does not, as this would result in training using data that was output from the model itself, rather than a different source.  
 
+Since we have a lot of user data, I realised that we can model the data and use techniques to make predictions, visualisations, and recommendations to help the user. Essentially, our data is like a time series, which is a highly-documented form of data (eg. weather, financial markets), meaning that the possibilities for interpreting this data are almost endless.
+
+Recognising this, I decided to implement a time series forecast with a regular moving average as well as an exponential moving average to make predictions about when the user is most likely to be distracted next. This was a technique I learnt in the SIG Algothon in July 2024, where I made a trading algorithm that was trained to trade stocks on a fictional share market. In terms of trading bots, it is a very simple algorithm (and excels at losing money to other people on the market), but it is more than capable of predicting when the user of the productivity-monitor will next get distracted, and the odds of that event occurring. 
+
 In Late Febuary of 2025, while taking COMP9517 (Computer Vision) at University, I came accross Mean Shift Clustering. Though originally introduced in the context of image segmentation, I realised its flexibility made it a great fit for analyzing time-based patterns in productivity. I was going to use K-Means clustering, but that required predefining the number of clusters, which might not be accurate. Mean Shift Clustering, on the other hand, dynamically identifies dense regions in the data, making it ideal of segmenting the day into periods of high and low productivity. As such, I used Mean Shift Clustering into the extension to provide users with personalised insights into their most and least productive hours.
 
-![alt text](readme-media/image.png)
+
+![alt text](<Screenshot 2025-04-03 201558.png>)
+![alt text](<Screenshot 2025-04-03 201607.png>)
 
 # Documentation for this project
 
