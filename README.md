@@ -12,6 +12,8 @@ The reason I switched to MongoDB is for a couple reasons. Firstly, Firebase is m
 
 However, I didn't let the Firebase evaluation data go to waste. After all, I had been collecting at least 4 month's worth of data from when I was using it before I wanted to make the server. I wrote code in `distractedWeb-ml-model` to retrieve the Firebase data, and also code to train an ML model with this data. I ultimately then added functionality to the server to use the ML model if they started it with `node index.js ML`. However, the `node index.js LLM` option is still there. Running with the LLM option saves the evaluations to MongoDB, so that further models can be trained. Running with the ML option does not, as this would result in training using data that was output from the model itself, rather than a different source.  
 
+In Late Febuary of 2025, while taking COMP9517 (Computer Vision) at University, I came accross Mean Shift Clustering. Though originally introduced in the context of image segmentation, I realised its flexibility made it a great fit for analyzing time-based patterns in productivity. I was going to use K-Means clustering, but that required predefining the number of clusters, which might not be accurate. Mean Shift Clustering, on the other hand, dynamically identifies dense regions in the data, making it ideal of segmenting the day into periods of high and low productivity. As such, I used Mean Shift Clustering into the extension to provide users with personalised insights into their most and least productive hours.
+
 ![alt text](readme-media/image.png)
 
 # Documentation for this project
