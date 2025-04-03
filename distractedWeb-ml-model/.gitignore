@@ -1,3 +1,4 @@
 *.csv
 distraction_detector_model_tf
 tfjs_model
+*.json
