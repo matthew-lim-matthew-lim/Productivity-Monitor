@@ -296,3 +296,48 @@ document.getElementById("days-slider").addEventListener("input", async function 
     console.log("No tracking data found.");
   }
 });
+
+document.getElementById("analyze-button").addEventListener("click", async () => {
+  // const localDataResult = await chrome.storage.local.get("trackingData");
+  // const local_data = localDataResult.trackingData;
+
+  const data = {
+    // Include your full data object here
+    productive_times: {
+      "day_0": ["2024-10-10T09:00:00Z", "2024-10-10T10:00:00Z"],
+      "day_1": ["2024-10-09T08:30:00Z"],
+      "day_2": ["2024-10-08T11:15:00Z", "2024-10-08T12:00:00Z"],
+      "day_3": [],
+      "day_4": ["2024-10-06T13:45:00Z"],
+      "day_5": [],
+      "day_6": ["2024-10-04T09:30:00Z"]
+    },
+    distracted_times: {
+      "day_0": ["2024-10-10T11:00:00Z", "2024-10-10T12:00:00Z"],
+      "day_1": ["2024-10-09T14:15:00Z"],
+      "day_2": [],
+      "day_3": ["2024-10-07T16:30:00Z", "2024-10-07T17:00:00Z"],
+      "day_4": [],
+      "day_5": ["2024-10-05T18:45:00Z"],
+      "day_6": ["2024-10-04T20:30:00Z"]
+    }
+  };
+
+  try {
+    const response = await fetch('https://productivity-monitor.onrender.com/api/calculate-most-productive-time', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data })
+    });
+
+    const result = await response.json();
+
+    document.getElementById("results").innerHTML = `
+      <p><strong>Most Productive Time (UTC):</strong> ${result.mostProductiveUTC || 'N/A'}</p>
+      <p><strong>Most Distracted Time (UTC):</strong> ${result.mostDistractedUTC || 'N/A'}</p>
+    `;
+  } catch (err) {
+    console.error("Error calling API:", err);
+    document.getElementById("results").textContent = "An error occurred while analyzing.";
+  }
+});

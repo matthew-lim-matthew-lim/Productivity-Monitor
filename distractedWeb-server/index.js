@@ -173,24 +173,40 @@ function floatToHourMinute(timeFloat) {
 }
   
 
-// Endpoint to find the most productive time using mean shift clustering
+// Endpoint to find the most productive time and most distracted time using mean shift clustering
 app.post('/api/calculate-most-productive-time', async (req, res) => {
     const { data } = req.body;
-
-    const hourData = extractHourFloats(data.productive_times);
-    const shifted = meanShift1D(hourData, 1.0);
-    const clusters = clusterPeaks(shifted);
-    clusters.sort((a, b) => b.points.length - a.points.length);
-
-    if (clusters.length > 0) {
-        const { hour, minute } = floatToHourMinute(clusters[0].center);
-        res.json({
-          mostProductiveUTC: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        });
-    } else {
-        res.status(400).json({ error: 'No Productive time found. Likely not enough data provided.' });
+  
+    const productiveHours = extractHourFloats(data.productive_times);
+    const distractedHours = extractHourFloats(data.distracted_times);
+  
+    const shiftedProductive = meanShift1D(productiveHours, 1.0);
+    const shiftedDistracted = meanShift1D(distractedHours, 1.0);
+  
+    const clustersProductive = clusterPeaks(shiftedProductive);
+    const clustersDistracted = clusterPeaks(shiftedDistracted);
+  
+    clustersProductive.sort((a, b) => b.points.length - a.points.length);
+    clustersDistracted.sort((a, b) => b.points.length - a.points.length);
+  
+    if (clustersProductive.length === 0 && clustersDistracted.length === 0) {
+      return res.status(400).json({ error: "Not enough data to compute either time." });
     }
-});
+  
+    const response = {};
+  
+    if (clustersProductive.length > 0) {
+      const { hour, minute } = floatToHourMinute(clustersProductive[0].center);
+      response.mostProductiveUTC = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    }
+  
+    if (clustersDistracted.length > 0) {
+      const { hour, minute } = floatToHourMinute(clustersDistracted[0].center);
+      response.mostDistractedUTC = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    }
+  
+    res.json(response);
+  });
 
 
 // Main and initialisation
