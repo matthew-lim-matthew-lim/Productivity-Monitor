@@ -1,0 +1,3 @@
+- Run `get-firebase-data.ipynb` to get the data from firebase.
+- Run `train-ml-model.ipynb` to train a tensorflow model in `.keras` format.
+- In bash, run `tensorflowjs_converter --input_format=tf_saved_model distraction_detector_model_tf tfjs_model/` to convert the model for use in JS backend. This will create a folder `tfjs_model/` containing `model.json` and `group1-shared*.bin`. Both these files are necessary for JS to be able to use the model.
