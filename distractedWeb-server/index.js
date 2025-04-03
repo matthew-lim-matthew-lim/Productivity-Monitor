@@ -117,7 +117,85 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-// Load Vocab
+// Mean Shift Clustering for determining the most productive time
+
+// Convert timestamps to float hours in UTC
+function extractHourFloats(timesMap) {
+    return Object.values(timesMap).flat().map(ts => {
+      const d = new Date(ts);
+      return d.getUTCHours() + d.getUTCMinutes() / 60;
+    });
+  }
+  
+  // 1D Mean Shift implementation
+  function meanShift1D(data, bandwidth = 1.0, maxIter = 100, epsilon = 0.01) {
+    const shifted = data.map(p => p); // copy
+    for (let iter = 0; iter < maxIter; iter++) {
+      let hasChanged = false;
+      for (let i = 0; i < shifted.length; i++) {
+        const xi = shifted[i];
+        // Get all points within bandwidth
+        const neighbors = data.filter(xj => Math.abs(xj - xi) <= bandwidth);
+        if (neighbors.length === 0) continue;
+        const mean = neighbors.reduce((sum, x) => sum + x, 0) / neighbors.length;
+        if (Math.abs(mean - xi) > epsilon) {
+          shifted[i] = mean;
+          hasChanged = true;
+        }
+      }
+      if (!hasChanged) break;
+    }
+    return shifted;
+  }
+  
+// Group shifted points into clusters
+function clusterPeaks(shifted, tolerance = 0.5) {
+    const clusters = [];    
+    for (let x of shifted) {
+        let found = false;
+        for (let c of clusters) {
+        if (Math.abs(c.center - x) <= tolerance) {
+            c.points.push(x);
+            c.center = c.points.reduce((a, b) => a + b, 0) / c.points.length;
+            found = true;
+            break;
+        }
+        }
+        if (!found) clusters.push({ center: x, points: [x] });
+    }
+    return clusters;
+}
+
+function floatToHourMinute(timeFloat) {
+    const hour = Math.floor(timeFloat);
+    const minute = Math.round((timeFloat - hour) * 60);
+    return { hour, minute };
+}
+  
+
+// Endpoint to find the most productive time using mean shift clustering
+app.post('/api/calculate-most-productive-time', async (req, res) => {
+    const { data } = req.body;
+
+    const hourData = extractHourFloats(data.productive_times);
+    const shifted = meanShift1D(hourData, 1.0);
+    const clusters = clusterPeaks(shifted);
+    clusters.sort((a, b) => b.points.length - a.points.length);
+
+    if (clusters.length > 0) {
+        const { hour, minute } = floatToHourMinute(clusters[0].center);
+        res.json({
+          mostProductiveUTC: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        });
+    } else {
+        res.status(400).json({ error: 'No Productive time found. Likely not enough data provided.' });
+    }
+});
+
+
+// Main and initialisation
+
+// Load Vocab 
 function loadVocab() {
   const vocab = JSON.parse(fs.readFileSync(VOCAB_PATH));
   vocab.forEach((word, idx) => {
