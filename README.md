@@ -21,8 +21,8 @@ Recognising this, I decided to implement a time series forecast with a regular m
 In Late Febuary of 2025, while taking COMP9517 (Computer Vision) at University, I came accross Mean Shift Clustering. Though originally introduced in the context of image segmentation, I realised its flexibility made it a great fit for analyzing time-based patterns in productivity. I was going to use K-Means clustering, but that required predefining the number of clusters, which might not be accurate. Mean Shift Clustering, on the other hand, dynamically identifies dense regions in the data, making it ideal of segmenting the day into periods of high and low productivity. As such, I used Mean Shift Clustering into the extension to provide users with personalised insights into their most and least productive hours.
 
 
-![alt text](<Screenshot 2025-04-03 201558.png>)
-![alt text](<Screenshot 2025-04-03 201607.png>)
+![alt text](<readme-media/Screenshot 2025-04-03 201558.png>)
+![alt text](<readme-media/Screenshot 2025-04-03 201607.png>)
 
 # Documentation for this project
 
