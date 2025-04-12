@@ -28,6 +28,7 @@ In Late Febuary of 2025, while taking COMP9517 (Computer Vision) at University, 
 
 ## Features to implement:
 
+- Use Gemini Free API for 1 million tokens free per day. Create a seperate mode of running the server that makes the distraction resolving mechanism automatically switch to the pre-trained ML model when the token limit is reached. Also create seperate modes to use the Gemini Free API or the DeepSeek API (always paid). 
 - See time spent on productive websites vs unproductive websites.
     - Generate pie chart for it.
     - Generate a horizontal graph to show how time was spend throughout the day (2 seperate colours for productive vs unproductive websites).
